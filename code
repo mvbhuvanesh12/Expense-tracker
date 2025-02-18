@@ -1,0 +1,89 @@
+//java code and sql
+import mysql.connector
+from datetime import datetime
+
+# MySQL Database Connection
+conn = mysql.connector.connect(
+    host="localhost",
+    user="root",       # Change to your MySQL username
+    password="root",   # Change to your MySQL password
+    database="expense_tracker"
+)
+cursor = conn.cursor()
+
+# Function to Add Expense
+def add_expense():
+    category = input("Enter expense category: ")
+    amount = float(input("Enter amount: "))
+    date = input("Enter date (YYYY-MM-DD) or press Enter for today: ")
+    
+    if not date:
+        date = datetime.today().strftime('%Y-%m-%d')
+    
+    query = "INSERT INTO expenses (category, amount, date) VALUES (%s, %s, %s)"
+    cursor.execute(query, (category, amount, date))
+    conn.commit()
+    print("Expense added successfully!")
+
+# Function to View Expenses
+def view_expenses():
+    print("\n1. View All Expenses")
+    print("2. View by Category")
+    print("3. View by Date")
+    choice = input("Enter choice: ")
+
+    query = "SELECT * FROM expenses"
+    params = ()
+
+    if choice == "2":
+        category = input("Enter category: ")
+        query = "SELECT * FROM expenses WHERE category = %s"
+        params = (category,)
+    elif choice == "3":
+        date = input("Enter date (YYYY-MM-DD): ")
+        query = "SELECT * FROM expenses WHERE date = %s"
+        params = (date,)
+
+    cursor.execute(query, params)
+    records = cursor.fetchall()
+
+    if not records:
+        print("No expenses found.")
+    else:
+        print("\nID | Category | Amount | Date")
+        print("-" * 40)
+        for row in records:
+            print(f"{row[0]} | {row[1]} | {row[2]} | {row[3]}")
+
+# Function to Delete Expense
+def delete_expense():
+    expense_id = input("Enter Expense ID to delete: ")
+    query = "DELETE FROM expenses WHERE id = %s"
+    cursor.execute(query, (expense_id,))
+    conn.commit()
+    print("Expense deleted successfully!")
+
+# Main Menu
+while True:
+    print("\n==== Expense Tracker ====")
+    print("1. Add Expense")
+    print("2. View Expenses")
+    print("3. Delete Expense")
+    print("4. Exit")
+    choice = input("Enter your choice: ")
+
+    if choice == "1":
+        add_expense()
+    elif choice == "2":
+        view_expenses()
+    elif choice == "3":
+        delete_expense()
+    elif choice == "4":
+        print("Exiting... Goodbye!")
+        break
+    else:
+        print("Invalid choice! Please try again.")
+
+# Close Connection
+cursor.close()
+conn.close()
